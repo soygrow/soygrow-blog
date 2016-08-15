@@ -3,9 +3,9 @@ title: DeviceIoControl 的一个用处
 ---
 
 ## 背景
-最近一个月一直在做快速扫描磁盘文件的东西，主要是通过扫描NTFS格式的磁盘中的索引树（B-树），可以得到整个磁盘文件的索引，然后通过遍历其索引树，即可得到目录下有哪些文件。这个需要对NTFS格式的磁盘的内部数据结构有一定的了解，这个可以参考我的另外一篇文章（这里还没有完成，待我完成时发布出来，当然网上也有很多资料）。
+最近一个月一直在做快速扫描磁盘文件的东西，主要是通过扫描NTFS格式的磁盘中的索引树（B-树，经过我查证，应该是B-树），可以得到整个磁盘文件的索引，然后通过遍历其索引树，即可得到目录下有哪些文件。这个需要对NTFS格式的磁盘的内部数据结构有一定的了解，这个可以参考我的另外一篇文章（这里还没有完成，待我完成时发布出来，当然网上也有很多资料）。
 
-预期是希望能够比windows的API（FindFirstFile和FindNextFile）效率要高，但是实际结果却不好，原因是磁盘IO太多了，因为首先找到根目录，然后找到根目录下的文件以及目录，然后再通过目录寻找其目录下的文件以及文件夹，所以需要不断的磁盘IO。
+预期是希望能够比windows的API（`FindFirstFile`和`FindNextFile`）效率要高，但是实际结果却不好，原因是磁盘IO太多了，因为首先找到根目录，然后找到根目录下的文件以及目录，然后再通过目录寻找其目录下的文件以及文件夹，所以需要不断的磁盘IO。
 
 这里我使用的文件映射（CreateFileMapping好像不可以映射磁盘）、异步IO以及windows的完成端口（IOCP），最终的效果都不好。
 
@@ -49,7 +49,7 @@ Volume Management Control Codes
 ```
 控制码比较多，这里只介绍读取MFT的控制码，其他有兴趣可以参考MSDN。这个控制是`File Management Control Codes`中的 `FSCTL_GET_NTFS_FILE_RECORD`。
 
-这个控制在MSDN中的解释是`Retrieves the first file record that is in use and is of a lesser than or equal ordinal value to the requested file reference number.`主要意思是通过文件参考号（file reference number）获得File Entry。
+这个控制在MSDN中的解释是`Retrieves the first file record that is in use and is of a lesser than or equal ordinal value to the requested file reference number.`说实话，我也没有完全理解这句话，暂且理解成通过`file reference number`获得`file entry`。
 
 ### 控制码对应的API参数
 再看该控制码对应的API参数结构：
@@ -133,3 +133,14 @@ int ReadMFT(FILE_RECORD_HEADER* mftRecord, ULONGLONG mftID)
 	return 0;
 }
 ```
+
+## 效率
+从我最终的测试结果来看，利用`DeviceIoControl`的控制码读取MFT的效率是非常快的。
+- 操作系统：windows 7 64 bit
+- 内存：8G
+- 测试对象：系统盘（C盘），大概有45万个文件
+
+扫描系统盘所有File Entry，并且将读取的所有File Entry自建索引树，总共用时 2秒 不到。所以这个效率还是很高的。至少比ReadFile来读取MFT的效率要高。
+
+如果本文对你有用，请留下你来过的痕迹，转载请注明出处[https://soygrow.github.io]！2016年8月4号于北京
+
