@@ -102,4 +102,4 @@ NTFS是包含若干用于定义和阻止文件系统的文件。这些文件中�
 > http://www.cnblogs.com/skogkatt/p/4246783.html
 > https://zh.wikipedia.org/zh-cn/NTFS
 
-如果本文对你有用，请留下你来过的痕迹，转载请注明出处! 2016年8月4号于北京  https://soygrow.github.io
+整理的比较辛苦，如果本文对你有用，请留下你来过的痕迹，转载请注明出处! 2016年8月4号于北京  https://soygrow.github.io
